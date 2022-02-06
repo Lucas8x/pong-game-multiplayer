@@ -1,0 +1,29 @@
+{
+  "name": "pgame",
+  "version": "0.1.0",
+  "main": "server.js",
+  "license": "MIT",
+  "author": "Lucas8x",
+  "scripts": {
+    "dev": "tsnd --transpile-only --ignore-watch node_modules --watch .env,public src/server.ts",
+    "dev2": "tsnd --transpile-only --clear --ignore-watch node_modules --watch .env src/server.ts",
+    "build": "tsc --build",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "chalk": "4.1.2",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.2",
+    "socket.io": "^4.4.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.5.5"
+  },
+  "keywords": [
+    "pong",
+    "multiplayer",
+    "socket.io"
+  ]
+}

@@ -1,0 +1,8 @@
+#box {
+  width: 500px;
+  height: 500px;
+  border: 5px solid red;
+  background-color: black;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}

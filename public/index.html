@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <title>Pong Multiplayer</title>
+</head>
+<body>
+  <canvas id='box' width='15' height='15'></canvas>
+</body>
+<script type="module">
+  const canvas = document.getElementById('box');
+  const ctx = canvas.getContext("2d");
+
+  const socket = io();
+
+  socket.on('connect', () => {
+    const playerId = socket.id;
+    console.log(`[IO] Connected to server. Player ID: ${playerId}`);
+    socket.emit('enter_game');
+  });
+
+  socket.on('state', (state) => {
+    renderState(state);
+  });
+
+  function renderState(state) {
+    ctx.fillStyle = "#000";
+    ctx.clearRect(0, 0, 15, 15);
+
+    for (const playerId in state.players) {
+      if (!playerId) return;
+
+      const player = state.players[playerId];
+
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(player.x, player.y, 1, -1);
+      ctx.fillRect(player.x, player.y, 1, 1);
+      ctx.fillRect(player.x, player.y, 1, 2);
+    }
+
+    const ball = state.ball;
+    ctx.fillRect(ball.x, ball.y, 1, 1);
+  }
+
+  function handleKeyboard(e) {
+    const key = e.key;
+    if (key === 'Enter')
+      socket.emit('start');
+
+    const direction = {"ArrowUp": "up", "ArrowDown": "down"}[key];
+    if (direction) {
+      socket.emit('move', { direction });
+    }
+  }
+
+  document.addEventListener('keydown', handleKeyboard)
+</script>
+</html>
