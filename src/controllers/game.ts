@@ -26,14 +26,14 @@ export class Game {
         width: 15,
         height: 15,
       },
-      ball: new Ball(7, 7, 15),
+      ball: new Ball(7, 7),
     };
     this.intervals = [];
   }
 
   private playersLength = (): number => Object.keys(this.state.players).length;
 
-  public addPlayer(playerId: string) {
+  public addPlayer(playerId: string): boolean {
     if (this.state.players[playerId]) return false;
 
     if (this.playersLength() === 0) {
@@ -47,16 +47,14 @@ export class Game {
     return true;
   }
 
-  public removePlayer(playerId: string) {
+  public removePlayer(playerId: string): boolean {
     return delete this.state.players[playerId];
   }
 
-  public movePlayer(playerId: string, direction: string) {
+  public movePlayer(playerId: string, direction: string): void {
     const player = this.state.players[playerId];
 
     if (!player) return;
-
-    player.y + 1 < this.state.screen.height - 1;
 
     if (direction === 'up' && !(player.y - 1 >= 1)) return;
     if (direction === 'down' && !(player.y + 1 < this.state.screen.height - 1))
@@ -65,44 +63,46 @@ export class Game {
     player.movePlayer(direction);
   }
 
-  private increaseScore(side: string) {
+  private increaseScore(side: string): void {
     const index = side === 'left' ? 0 : 1;
     const playerId = Object.keys(this.state.players)[index];
     const player = this.state.players[playerId];
     player.increaseScore();
   }
 
-  private checkBallCollision() {
+  private checkBallCollision(): void {
     const ball = this.state.ball;
 
     const index = ball.directions.x === 'left' ? 0 : 1;
     const player = this.state.players[Object.keys(this.state.players)[index]];
     const playerSpace = player.playerSpace();
 
+    // screen collision
     if (ball.y <= -1 || ball.y === this.state.screen.height) {
       return this.state.ball.invertBallDirection('y');
     }
 
+    // player collision
     if (playerSpace.x.includes(ball.x) && playerSpace.y.includes(ball.y)) {
       return this.state.ball.invertBallDirection('x');
     }
 
+    // after player collision
     if (ball.x <= -1 || ball.x >= this.state.screen.width) {
       this.increaseScore(ball.directions.x);
-      ball.x = 7;
-      ball.y = 7;
+      this.state.ball.reset();
       this.state.ball.randomBallDirection();
     }
   }
 
-  private hasEnoughPlayers() {
+  private hasEnoughPlayers(): void {
     if (this.playersLength() !== 2) {
       this.stop();
       log(chalk`[{yellow GAME}] Stopped, not enough players.`);
     }
   }
 
-  public start() {
+  public start(): boolean {
     if (this.intervals.length || this.playersLength() < 2) return;
 
     log(chalk`[{yellow GAME}] Starting...`);
@@ -120,7 +120,7 @@ export class Game {
     return true;
   }
 
-  public stop() {
+  public stop(): void {
     this.intervals.forEach((interval) => clearInterval(interval));
     this.intervals = [];
   }

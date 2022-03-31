@@ -8,7 +8,7 @@ export class SocketServer extends Server {
     super(httpServer);
   }
 
-  public static getInstance(httpServer?: http.Server) {
+  public static getInstance(httpServer?: http.Server): SocketServer {
     if (!SocketServer.io) {
       SocketServer.io = new SocketServer(httpServer);
     }
