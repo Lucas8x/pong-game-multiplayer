@@ -6,7 +6,7 @@
   "author": "Lucas8x",
   "scripts": {
     "dev": "tsnd --transpile-only --ignore-watch node_modules --watch .env,public src/server.ts",
-    "dev2": "tsnd --transpile-only --clear --ignore-watch node_modules --watch .env src/server.ts",
+    "dev2": "tsnd --transpile-only --clear --ignore-watch node_modules --watch .env,public src/server.ts",
     "build": "tsc --build",
     "start": "node dist/server.js"
   },
