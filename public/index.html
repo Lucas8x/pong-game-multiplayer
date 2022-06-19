@@ -15,13 +15,14 @@
   const socket = io();
 
   socket.on('connect', () => {
-    const playerId = socket.id;
-    console.log(`[IO] Connected to server. Player ID: ${playerId}`);
+    const { id } = socket;
+    console.log(`[IO] Connected to server. Player ID: ${id}`);
     socket.emit('enter_game');
   });
 
   socket.on('state', (state) => {
     renderState(state);
+    console.log(state);
   });
 
   function renderState(state) {
@@ -44,7 +45,7 @@
   }
 
   function handleKeyboard(e) {
-    const key = e.key;
+    const { key } = e;
     if (key === 'Enter')
       socket.emit('start');
 

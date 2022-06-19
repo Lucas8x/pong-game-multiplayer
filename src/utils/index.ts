@@ -8,3 +8,8 @@ export const config = {
   MAX_ROOMS: parseInt(process.env.MAX_ROOMS) || 10,
   BALL_SPEED: parseInt(process.env.BALL_SPEED) || 5,
 };
+
+export const randomID = (size = 6) =>
+  Math.random()
+    .toString(36)
+    .slice(2, size + 2);
