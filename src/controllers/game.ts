@@ -49,12 +49,19 @@ export class Game {
   private playersLength = (): number => Object.keys(this.state.players).length;
 
   public addPlayer(playerId: string): void {
-    if (this.state.players[playerId]) return;
+    if (this.state.players[playerId] || this.playersLength() >= 2) return;
 
-    this.state.players[playerId] =
-      this.playersLength() === 0
-        ? new Player(1, 1)
-        : new Player(this.state.screen.width - 2, this.state.screen.height - 2);
+    const otherPlayer = this.state.players[Object.keys(this.state.players)[0]];
+
+    if (otherPlayer?.x === 1) {
+      this.state.players[playerId] = new Player(
+        this.state.screen.width - 2,
+        this.state.screen.height - 2
+      );
+    } else {
+      this.state.players[playerId] = new Player(1, 1);
+    }
+
     this.log(`Player ${chalk.cyan(playerId)} entered game.`);
   }
 
@@ -66,10 +73,11 @@ export class Game {
   public movePlayer(playerId: string, direction: string): void {
     const player = this.state.players[playerId];
 
-    if (!player) return;
-
-    if (direction === 'up' && !(player.y - 1 >= 1)) return;
-    if (direction === 'down' && !(player.y + 1 < this.state.screen.height - 1))
+    if (
+      !player ||
+      (direction === 'up' && !(player.y - 1 >= 1)) ||
+      (direction === 'down' && !(player.y + 1 < this.state.screen.height - 1))
+    )
       return;
 
     player.movePlayer(direction);
