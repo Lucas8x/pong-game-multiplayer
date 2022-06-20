@@ -9,6 +9,7 @@ export class Game {
   private io = SocketServer.getInstance();
   private intervals: NodeJS.Timeout[];
   public id: string;
+  private started: boolean;
   public state: {
     players: {
       [playerId: string]: Player;
@@ -27,6 +28,7 @@ export class Game {
   constructor(id: string, ball_speed: number, tick_rate: number) {
     this.intervals = [];
     this.id = id;
+    this.started = false;
     this.state = {
       players: {},
       screen: {
@@ -46,19 +48,19 @@ export class Game {
 
   private playersLength = (): number => Object.keys(this.state.players).length;
 
-  public addPlayer(playerId: string): IAddPlayerResponse {
-    if (this.state.players[playerId])
-      return { joined: false, error: 'Player already exists' };
+  public addPlayer(playerId: string): void {
+    if (this.state.players[playerId]) return;
 
     this.state.players[playerId] =
       this.playersLength() === 0
         ? new Player(1, 1)
         : new Player(this.state.screen.width - 2, this.state.screen.height - 2);
-    return { joined: true };
+    this.log(`Player ${chalk.cyan(playerId)} entered game.`);
   }
 
-  public removePlayer(playerId: string): boolean {
-    return delete this.state.players[playerId];
+  public removePlayer(playerId: string): void {
+    this.log(`Player ${chalk.cyan(playerId)} left the game.`);
+    delete this.state.players[playerId];
   }
 
   public movePlayer(playerId: string, direction: string): void {
@@ -78,6 +80,14 @@ export class Game {
     const playerId = Object.keys(this.state.players)[index];
     const player = this.state.players[playerId];
     player.increaseScore();
+  }
+
+  public switchReady(playerId: string): void {
+    const player = this.state.players[playerId];
+    if (!player || player.ready) return;
+
+    player.switchReady();
+    this.log(`Player ${chalk.cyan(playerId)} is ready`);
   }
 
   private checkBallCollision(): void {
@@ -122,19 +132,17 @@ export class Game {
   }
 
   private isBothPlayersReady(): boolean {
-    const ready1 = this.state?.players[0]?.ready;
-    const ready2 = this.state?.players[1]?.ready;
+    const players = Object.values(this.state.players);
+    const ready1 = players[0]?.ready;
+    const ready2 = players[1]?.ready;
     return ready1 && ready2;
   }
 
-  public start(): boolean {
-    if (
-      this.intervals.length ||
-      this.playersLength() < 2 /* ||
-      !this.isBothPlayersReady() */
-    )
-      return false;
+  public start() {
+    if (this.started || this.playersLength() < 2) return;
 
+    clearInterval(this.intervals[2]);
+    this.started = true;
     this.log('Starting...');
 
     this.intervals[0] = setInterval(() => {
@@ -146,12 +154,23 @@ export class Game {
       this.hasEnoughPlayers();
       this.io.emit('state', this.stateToBeSend());
     }, 1000 / this.settings.tick_rate);
+  }
 
-    return true;
+  public waiting() {
+    this.intervals[2] = setInterval(() => {
+      if (this.started) return;
+
+      if (this.isBothPlayersReady()) {
+        this.log('Both players are ready');
+        this.start();
+      }
+    }, 1000);
   }
 
   public stop(): void {
     this.intervals.forEach((interval) => clearInterval(interval));
     this.intervals = [];
+    this.started = false;
+    this.waiting();
   }
 }

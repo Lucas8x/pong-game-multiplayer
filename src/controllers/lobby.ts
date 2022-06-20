@@ -35,6 +35,7 @@ export class Lobby {
         `${this.roomsLength()}/${this.max_rooms}`
       )}] Created room: ${chalk.blue(id)}`
     );
+    game.waiting();
     return game;
   }
 }

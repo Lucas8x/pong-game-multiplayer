@@ -47,7 +47,7 @@
   function handleKeyboard(e) {
     const { key } = e;
     if (key === 'Enter')
-      socket.emit('start');
+      socket.emit('ready');
 
     const direction = {"ArrowUp": "up", "ArrowDown": "down"}[key];
     if (direction) {

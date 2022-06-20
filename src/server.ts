@@ -29,12 +29,11 @@ io.on('connection', (socket: Socket) => {
   log(chalk`[{green IO}] New Connection: {cyan ${id}}`);
 
   socket.on('enter_game', () => {
-    if (game.addPlayer(id).joined)
-      game.log(`Player ${chalk.cyan(id)} entered game.`);
+    game.addPlayer(id);
   });
 
-  socket.on('start', () => {
-    if (game.start()) game.log(`${chalk.cyan(id)} started the game.`);
+  socket.on('ready', () => {
+    game.switchReady(id);
   });
 
   socket.on('move', ({ direction }) => {
@@ -42,8 +41,7 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('disconnect', () => {
-    if (game.removePlayer(id))
-      game.log(`Player ${chalk.cyan(id)} left the game.`);
+    game.removePlayer(id);
     log(chalk`[{red IO}] Disconnected: {cyan ${id}}`);
   });
 });
