@@ -2,6 +2,7 @@ import chalk from 'chalk';
 
 import { SocketServer } from '../socketio';
 import { log } from '../utils';
+
 import { Ball } from './ball';
 import { Player } from './player';
 
@@ -9,7 +10,7 @@ export class Game {
   private io = SocketServer.getInstance();
   private intervals: NodeJS.Timeout[];
   public id: string;
-  private started: boolean;
+  public started: boolean;
   public state: {
     players: {
       [playerId: string]: Player;
@@ -21,11 +22,11 @@ export class Game {
     };
   };
   public settings: {
-    ball_speed: number;
-    tick_rate: number;
+    ballSpeed: number;
+    tickRate: number;
   };
 
-  constructor(id: string, ball_speed: number, tick_rate: number) {
+  constructor(id: string, ballSpeed: number, tickRate: number) {
     this.intervals = [];
     this.id = id;
     this.started = false;
@@ -38,31 +39,61 @@ export class Game {
       ball: new Ball(7, 7),
     };
     this.settings = {
-      ball_speed,
-      tick_rate,
+      ballSpeed,
+      tickRate,
     };
   }
 
-  public log = (message?: any): void =>
-    log(chalk`[{yellow GAME}][{yellow ${this.id}}] ${message}`);
+  /**
+   * Log on console a message with game id prefix .
+   * @param message
+   */
+  public log = (message: any): void =>
+    log(chalk`[{yellow GAME}] [{yellow ${this.id}}] ${message}`);
 
-  private playersLength = (): number => Object.keys(this.state.players).length;
+  public playersLength = (): number => Object.keys(this.state.players).length;
 
-  public addPlayer(playerId: string): void {
-    if (this.state.players[playerId] || this.playersLength() >= 2) return;
+  public avaliable = () => this.playersLength() < 2;
+
+  public addPlayer(player: Player): void {
+    if (this.state.players[player.id] || this.playersLength() >= 2) return;
+    const { id } = player;
+
+    player.socket.join(this.id);
+
+    player.socket.on('move', ({ direction }) => {
+      this.movePlayer(id, direction);
+    });
+
+    player.socket.on('ready', () => {
+      player.switchReady();
+      this.log(
+        chalk`Player {cyan ${id}} is ${player.ready ? 'ready' : 'unready'}.`
+      );
+      this.tryStart();
+    });
+
+    player.socket.on('disconnect', () => {
+      this.removePlayer(id);
+    });
 
     const otherPlayer = this.state.players[Object.keys(this.state.players)[0]];
 
     if (otherPlayer?.x === 1) {
-      this.state.players[playerId] = new Player(
+      player.setCoords(
         this.state.screen.width - 2,
         this.state.screen.height - 2
       );
     } else {
-      this.state.players[playerId] = new Player(1, 1);
+      player.setCoords(1, 1);
     }
+    this.state.players[id] = player;
 
-    this.log(`Player ${chalk.cyan(playerId)} entered game.`);
+    this.log(
+      chalk`[{yellow ${this.playersLength()}/2}] Player ${chalk.cyan(
+        id
+      )} entered game.`
+    );
   }
 
   public removePlayer(playerId: string): void {
@@ -95,7 +126,7 @@ export class Game {
     if (!player || player.ready) return;
 
     player.switchReady();
-    this.log(`Player ${chalk.cyan(playerId)} is ready`);
+    this.log(`Player ${chalk.cyan(playerId)} is ready.`);
   }
 
   private checkBallCollision(): void {
@@ -123,18 +154,30 @@ export class Game {
     }
   }
 
+  private reset() {
+    this.state.ball.reset();
+  }
+
   private hasEnoughPlayers(): void {
     if (this.playersLength() !== 2) {
       this.stop();
+      this.reset();
       this.log('Stopped, not enough players.');
     }
   }
 
   private stateToBeSend() {
     const { x, y } = this.state.ball;
+
+    const players = this.state.players;
+    const playersData = Object.keys(players).map((key) => {
+      const { id, x, y } = players[key];
+      return { id, x, y };
+    });
+
     return {
       ball: { x, y },
-      players: { ...this.state.players },
+      players: playersData,
       screen: { ...this.state.screen },
     };
   }
@@ -156,29 +199,26 @@ export class Game {
     this.intervals[0] = setInterval(() => {
       this.state.ball.moveBall();
       this.checkBallCollision();
-    }, 1000 / this.settings.ball_speed);
+    }, 1000 / this.settings.ballSpeed);
 
     this.intervals[1] = setInterval(() => {
       this.hasEnoughPlayers();
-      this.io.emit('state', this.stateToBeSend());
-    }, 1000 / this.settings.tick_rate);
+      this.io.to(this.id).emit('state', this.stateToBeSend());
+    }, 1000 / this.settings.tickRate);
   }
 
-  public waiting() {
-    this.intervals[2] = setInterval(() => {
-      if (this.started) return;
+  private tryStart() {
+    if (this.started) return;
 
-      if (this.isBothPlayersReady()) {
-        this.log('Both players are ready');
-        this.start();
-      }
-    }, 1000);
+    if (this.isBothPlayersReady()) {
+      this.log('Both players are ready');
+      this.start();
+    }
   }
 
   public stop(): void {
     this.intervals.forEach((interval) => clearInterval(interval));
     this.intervals = [];
     this.started = false;
-    this.waiting();
   }
 }

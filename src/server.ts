@@ -3,8 +3,10 @@ import { Socket } from 'socket.io';
 import http from 'http';
 import chalk from 'chalk';
 
-import { log, config } from './utils';
+import { log } from './utils';
+import { enableMonitor, config } from './utils/env';
 import { SocketServer } from './socketio';
+import { Monitor } from './utils/monitor';
 import { Lobby } from './controllers/lobby';
 
 const { MAX_ROOMS, PORT, TICK_RATE, BALL_SPEED } = config;
@@ -16,7 +18,6 @@ const io = SocketServer.getInstance(server);
 app.use(express.static('public'));
 
 const lobby = new Lobby(MAX_ROOMS);
-const game = lobby.createRoom({ ball_speed: BALL_SPEED, tick_rate: TICK_RATE });
 
 io.on('connection', (socket: Socket) => {
   if (io.engine.clientsCount > MAX_ROOMS * 2) {
@@ -26,23 +27,21 @@ io.on('connection', (socket: Socket) => {
   }
 
   const { id } = socket;
-  log(chalk`[{green IO}] New Connection: {cyan ${id}}`);
+  const currentConnections = `${io.engine.clientsCount}/${MAX_ROOMS * 2}`;
+  log(
+    chalk`[{green IO}] [{green ${currentConnections}}] New Connection: {cyan ${id}}`
+  );
 
   socket.on('enter_game', () => {
-    game.addPlayer(id);
+    lobby.quickJoin(socket);
   });
 
-  socket.on('ready', () => {
-    game.switchReady(id);
-  });
-
-  socket.on('move', ({ direction }) => {
-    game.movePlayer(id, direction);
-  });
+  socket.on('enter_with_id', () => {});
 
   socket.on('disconnect', () => {
-    game.removePlayer(id);
-    log(chalk`[{red IO}] Disconnected: {cyan ${id}}`);
+    log(
+      chalk`[{red IO}] [{red ${currentConnections}}] Disconnected: {cyan ${id}}`
+    );
   });
 });
 
@@ -54,4 +53,5 @@ server.listen(PORT, () => {
     chalk`\n[{magenta SERVER}] Game tick rate: {cyan ${TICK_RATE}}`,
     chalk`\n[{magenta SERVER}] Game ball speed: {cyan ${BALL_SPEED}}`
   );
+  enableMonitor && Monitor(lobby, io);
 });

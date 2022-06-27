@@ -1,18 +1,24 @@
-interface IPlayerSpace {
-  x: [number, number, number];
-  y: [number];
-}
+import { Socket } from 'socket.io';
+import { IPlayerSpace } from '../interfaces';
 
 export class Player {
   static playerLength = 3;
+  public id: string;
+  public x: number;
+  public y: number;
   public score: number;
   public ready: boolean;
 
-  constructor(public x: number, public y: number) {
-    this.x = x;
-    this.y = y;
+  constructor(public socket: Socket) {
+    this.socket = socket;
+    this.id = socket.id;
     this.score = 0;
     this.ready = false;
+  }
+
+  public setCoords(x: number, y: number) {
+    this.x = x;
+    this.y = y;
   }
 
   public playerSpace = (): IPlayerSpace => ({

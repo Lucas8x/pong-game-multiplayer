@@ -1,4 +1,9 @@
-interface IAddPlayerResponse {
+export interface IDirectEnterRoom {
   joined: boolean;
-  error?: string;
+  msg?: string;
+}
+
+export interface IPlayerSpace {
+  x: [number, number, number];
+  y: [number];
 }
