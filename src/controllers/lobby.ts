@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Socket } from 'socket.io';
 
-import { IDirectEnterRoom } from '../interfaces';
+import { IAllRooms, IDirectEnterRoom, ILobbyCreateRoom } from '../interfaces';
 import { log, randomID } from '../utils';
 
 import { Game } from './game';
@@ -15,24 +15,25 @@ export class Lobby {
     this.createRoom();
   }
 
-  public log = (message?: any): void =>
+  private log = (message?: any): void =>
     log(
       chalk`[{blue LOBBY}] [{blue ${this.roomsLength()}/${
         this.maxRooms
       }}] ${message}`
     );
 
-  public getAllRooms = (): { [key: string]: Game } => this.rooms;
+  public getAllRooms = (): IAllRooms => this.rooms;
 
-  public getRoom = (id: string): Game | undefined => this.rooms[id];
+  private getRoom = (id: string): Game | undefined => this.rooms[id];
 
-  private getRoomsIds = () => Object.keys(this.rooms);
+  private getRoomsIds = (): Array<string> => Object.keys(this.rooms);
 
-  public roomsLength = () => this.getRoomsIds().length;
+  public roomsLength = (): number => this.getRoomsIds().length;
 
-  public createRoom({ ballSpeed = 5, tickRate = 60 }: any = {}):
-    | string
-    | undefined {
+  private createRoom({
+    ballSpeed = 5,
+    tickRate = 60,
+  }: any = {}): ILobbyCreateRoom {
     const roomsIds = this.getRoomsIds();
     if (roomsIds.length === this.maxRooms) return;
 
@@ -45,12 +46,12 @@ export class Lobby {
     return id;
   }
 
-  private deleteRoom() {}
+  //private deleteRoom(): void {}
 
-  private getAvaliableRooms() {
-    const rooms = Object.values(this.rooms);
+  public getAvaliableRooms(): Array<Game> {
+    const rooms = Object.values(this.getAllRooms());
     const avaliableRooms = rooms.filter((room: Game) => room.avaliable());
-    return avaliableRooms as Array<Game>;
+    return avaliableRooms;
   }
 
   public directEnterRoom(socket: Socket, roomId: string): IDirectEnterRoom {
@@ -65,7 +66,7 @@ export class Lobby {
     return { joined: true };
   }
 
-  public quickJoin(socket: Socket) {
+  public quickJoin(socket: Socket): void {
     const { id } = socket;
     this.log(chalk`{cyan ${id}} matchmaking...`);
 

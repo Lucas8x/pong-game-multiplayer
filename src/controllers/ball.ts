@@ -6,11 +6,10 @@ export class Ball {
   };
   private initialPos: { x: number; y: number };
 
-  constructor(public x: number, public y: number /* , public limit: number */) {
+  constructor(public x: number, public y: number) {
     this.x = x;
     this.y = y;
     this.directions = { x: 'left', y: 'up' };
-    //this.limit = limit;
     this.initialPos = { x, y };
   }
 

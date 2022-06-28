@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { IReturnGameState } from '../interfaces';
 
 import { SocketServer } from '../socketio';
 import { log } from '../utils';
@@ -48,7 +49,7 @@ export class Game {
    * Log on console a message with game id prefix .
    * @param message
    */
-  public log = (message: any): void =>
+  private log = (message: any): void =>
     log(chalk`[{yellow GAME}] [{yellow ${this.id}}] ${message}`);
 
   public playersLength = (): number => Object.keys(this.state.players).length;
@@ -96,12 +97,12 @@ export class Game {
     );
   }
 
-  public removePlayer(playerId: string): void {
+  private removePlayer(playerId: string): void {
     this.log(`Player ${chalk.cyan(playerId)} left the game.`);
     delete this.state.players[playerId];
   }
 
-  public movePlayer(playerId: string, direction: string): void {
+  private movePlayer(playerId: string, direction: string): void {
     const player = this.state.players[playerId];
 
     if (
@@ -119,14 +120,6 @@ export class Game {
     const playerId = Object.keys(this.state.players)[index];
     const player = this.state.players[playerId];
     player.increaseScore();
-  }
-
-  public switchReady(playerId: string): void {
-    const player = this.state.players[playerId];
-    if (!player || player.ready) return;
-
-    player.switchReady();
-    this.log(`Player ${chalk.cyan(playerId)} is ready.`);
   }
 
   private checkBallCollision(): void {
@@ -154,7 +147,7 @@ export class Game {
     }
   }
 
-  private reset() {
+  private reset(): void {
     this.state.ball.reset();
   }
 
@@ -166,7 +159,7 @@ export class Game {
     }
   }
 
-  private stateToBeSend() {
+  private stateToBeSend(): IReturnGameState {
     const { x, y } = this.state.ball;
 
     const players = this.state.players;
@@ -175,11 +168,13 @@ export class Game {
       return { id, x, y };
     });
 
-    return {
+    const data = {
       ball: { x, y },
       players: playersData,
       screen: { ...this.state.screen },
     };
+
+    return data;
   }
 
   private isBothPlayersReady(): boolean {
@@ -189,7 +184,7 @@ export class Game {
     return ready1 && ready2;
   }
 
-  public start() {
+  private start(): void {
     if (this.started || this.playersLength() < 2) return;
 
     clearInterval(this.intervals[2]);
@@ -207,7 +202,7 @@ export class Game {
     }, 1000 / this.settings.tickRate);
   }
 
-  private tryStart() {
+  private tryStart(): void {
     if (this.started) return;
 
     if (this.isBothPlayersReady()) {
@@ -216,7 +211,7 @@ export class Game {
     }
   }
 
-  public stop(): void {
+  private stop(): void {
     this.intervals.forEach((interval) => clearInterval(interval));
     this.intervals = [];
     this.started = false;
