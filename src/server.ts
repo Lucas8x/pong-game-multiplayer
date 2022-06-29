@@ -19,6 +19,7 @@ app.use(express.static('public'));
 
 const lobby = new Lobby(MAX_ROOMS);
 
+const currentConnections = () => `${io.engine.clientsCount}/${MAX_ROOMS * 2}`;
 io.on('connection', (socket: Socket) => {
   if (io.engine.clientsCount > MAX_ROOMS * 2) {
     socket.emit('server reached max connections');
@@ -27,9 +28,8 @@ io.on('connection', (socket: Socket) => {
   }
 
   const { id } = socket;
-  const currentConnections = `${io.engine.clientsCount}/${MAX_ROOMS * 2}`;
   log(
-    chalk`[{green IO}] [{green ${currentConnections}}] New Connection: {cyan ${id}}`
+    chalk`[{green IO}] [{green ${currentConnections()}}] New Connection: {cyan ${id}}`
   );
 
   socket.on('enter_game', () => {
@@ -40,7 +40,7 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('disconnect', () => {
     log(
-      chalk`[{red IO}] [{red ${currentConnections}}] Disconnected: {cyan ${id}}`
+      chalk`[{red IO}] [{red ${currentConnections()}}] Disconnected: {cyan ${id}}`
     );
   });
 });
