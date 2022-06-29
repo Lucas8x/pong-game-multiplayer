@@ -14,7 +14,7 @@ function roomsInfo(lobby: Lobby) {
     const room = rooms[key];
     return {
       id: room.id,
-      players: room.playersLength(),
+      players: Object.keys(room.state.players),
       started: room.started,
     };
   });
@@ -23,67 +23,77 @@ function roomsInfo(lobby: Lobby) {
 }
 
 export function Monitor(lobby: Lobby, io: Server) {
-  var table = new Table({ style: { head: [], border: [] } });
+  const ms = 1000;
 
-  const tableUpdate = setInterval(() => {
+  const serverInfo = new Table({
+    style: {
+      head: [],
+      border: [],
+    },
+  });
+
+  const rooms = new Table({
+    style: {
+      head: [],
+      border: [],
+    },
+    wordWrap: true,
+    colWidths: [null, null, null, 24],
+  });
+
+  setInterval(() => {
     console.clear();
-    table.length = 0;
+    serverInfo.length = 0;
+    rooms.length = 0;
+    rooms.options.rowHeights = [null, null];
 
-    table[0] = [
-      { colSpan: 5, hAlign: 'center', content: new Date().toLocaleString() },
-    ];
+    serverInfo.push(
+      [
+        {
+          colSpan: 5,
+          hAlign: 'center',
+          content: new Date().toLocaleString(),
+        },
+      ],
+      [
+        { content: 'Connections', hAlign: 'center' },
+        { content: 'Rooms', hAlign: 'center' },
+        { content: 'Tick Rate', hAlign: 'center' },
+        { content: 'Ball Speed', hAlign: 'center' },
+        { content: 'Port', hAlign: 'center' },
+      ],
+      [
+        {
+          content: `${io.engine.clientsCount}/${MAX_ROOMS * 2}`,
+          hAlign: 'center',
+        },
+        { content: `${lobby.roomsLength()}/${MAX_ROOMS}`, hAlign: 'center' },
+        { content: TICK_RATE, hAlign: 'center' },
+        { content: BALL_SPEED, hAlign: 'center' },
+        { content: PORT, hAlign: 'center' },
+      ]
+    );
 
-    table[1] = [
-      { colSpan: 1, content: 'Connections', hAlign: 'center' },
-      { colSpan: 1, content: 'Rooms', hAlign: 'center' },
-      { colSpan: 1, content: 'Tick Rate', hAlign: 'center' },
-      { colSpan: 1, content: 'Ball Speed', hAlign: 'center' },
-      { colSpan: 1, content: 'Port', hAlign: 'center' },
-    ];
+    rooms.push(
+      [{ colSpan: 4, content: 'Rooms', hAlign: 'center' }],
+      [
+        { content: 'ID', hAlign: 'center' },
+        { content: 'Players', hAlign: 'center' },
+        { content: 'Started', hAlign: 'center' },
+        { content: 'Players', hAlign: 'center' },
+      ]
+    );
 
-    table[2] = [
-      {
-        colSpan: 1,
-        content: `${io.engine.clientsCount}/${MAX_ROOMS * 2}`,
-        hAlign: 'center',
-      },
-      {
-        colSpan: 1,
-        content: `${lobby.roomsLength()}/${MAX_ROOMS}`,
-        hAlign: 'center',
-      },
-      {
-        colSpan: 1,
-        content: TICK_RATE,
-        hAlign: 'center',
-      },
-      {
-        colSpan: 1,
-        content: BALL_SPEED,
-        hAlign: 'center',
-      },
-      {
-        colSpan: 1,
-        content: PORT,
-        hAlign: 'center',
-      },
-    ];
-
-    table[3] = [{ colSpan: 5, content: 'Rooms', hAlign: 'center' }];
-    table[4] = [
-      { colSpan: 1, content: 'ID', hAlign: 'center' },
-      { colSpan: 1, content: 'Players', hAlign: 'center' },
-      { colSpan: 1, content: 'Started', hAlign: 'center' },
-    ];
-
-    roomsInfo(lobby).map((x) => {
-      table.push([
-        { colSpan: 1, content: x.id, hAlign: 'center' },
-        { colSpan: 1, content: `${x.players}/2`, hAlign: 'center' },
-        { colSpan: 1, content: x.started ? 'Yes' : 'No', hAlign: 'center' },
+    roomsInfo(lobby).forEach((x) => {
+      rooms.push([
+        { content: x.id, hAlign: 'center' },
+        { content: `${x.players.length}/2`, hAlign: 'center' },
+        { content: x.started ? 'Yes' : 'No', hAlign: 'center' },
+        { content: x.players.join('\n'), hAlign: 'center' },
       ]);
     });
 
-    console.log(table.toString());
-  }, 1000);
+    console.log(serverInfo.toString());
+    console.log(rooms.toString());
+  }, ms);
 }
