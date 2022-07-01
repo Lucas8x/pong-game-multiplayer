@@ -57,8 +57,9 @@ export class Game {
   public avaliable = () => this.playersLength() < 2;
 
   public addPlayer(player: Player): void {
-    if (this.state.players[player.id] || this.playersLength() >= 2) return;
     const { id } = player;
+
+    if (this.state.players[id] || this.playersLength() >= 2) return;
 
     player.socket.join(this.id);
 
@@ -98,8 +99,10 @@ export class Game {
   }
 
   private removePlayer(playerId: string): void {
-    this.log(`Player ${chalk.cyan(playerId)} left the game.`);
     delete this.state.players[playerId];
+    this.log(
+      chalk`[{yellow ${this.playersLength()}/2}] Player {cyan ${playerId}} left the game.`
+    );
   }
 
   private movePlayer(playerId: string, direction: string): void {
@@ -129,7 +132,7 @@ export class Game {
     const player = this.state.players[Object.keys(this.state.players)[index]];
     const playerSpace = player.playerSpace();
 
-    // screen collision
+    // screen collision - top/bottom
     if (ball.y <= -1 || ball.y === this.state.screen.height) {
       return this.state.ball.invertBallDirection('y');
     }
@@ -139,7 +142,7 @@ export class Game {
       return this.state.ball.invertBallDirection('x');
     }
 
-    // after player collision
+    // after player collision - left/right side
     if (ball.x <= -1 || ball.x >= this.state.screen.width) {
       this.increaseScore(ball.directions.x);
       this.state.ball.reset();
@@ -203,12 +206,10 @@ export class Game {
   }
 
   private tryStart(): void {
-    if (this.started) return;
+    if (this.started || !this.isBothPlayersReady()) return;
 
-    if (this.isBothPlayersReady()) {
-      this.log('Both players are ready');
-      this.start();
-    }
+    this.log('Both players are ready');
+    this.start();
   }
 
   private stop(): void {

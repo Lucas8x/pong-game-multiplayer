@@ -3,16 +3,19 @@ import { Socket } from 'socket.io';
 
 import { IAllRooms, IDirectEnterRoom, ILobbyCreateRoom } from '../interfaces';
 import { log, randomID } from '../utils';
+import { config } from '../utils/env';
 
 import { Game } from './game';
 import { Player } from './player';
+
+const { BALL_SPEED, TICK_RATE } = config;
 
 export class Lobby {
   private rooms: {};
 
   constructor(private maxRooms: number = 50) {
     this.rooms = {};
-    this.createRoom();
+    this.createRoom({ ballSpeed: BALL_SPEED, tickRate: TICK_RATE });
   }
 
   private log = (message?: any): void =>
@@ -41,7 +44,9 @@ export class Lobby {
     const game = new Game(id, ballSpeed, tickRate);
     this.rooms[id] = game;
 
-    this.log(chalk`Created room: {blue ${id}}`);
+    this.log(
+      chalk`Created room: {blue ${id}} [{blue BS:${ballSpeed}}|{blue TR:${tickRate}}]`
+    );
 
     return id;
   }
@@ -63,6 +68,7 @@ export class Lobby {
 
     const player = new Player(socket);
     room.addPlayer(player);
+
     return { joined: true };
   }
 
@@ -72,7 +78,10 @@ export class Lobby {
 
     const rooms = this.getAvaliableRooms();
 
-    const roomId = rooms.length > 0 ? rooms[0].id : this.createRoom();
+    const roomId =
+      rooms.length > 0
+        ? rooms[0].id
+        : this.createRoom({ ballSpeed: BALL_SPEED, tickRate: TICK_RATE });
     if (!roomId) return;
 
     this.directEnterRoom(socket, roomId);
