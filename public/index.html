@@ -5,9 +5,14 @@
   <script src="/socket.io/socket.io.js"></script>
   <title>Pong Multiplayer</title>
 </head>
+
 <body>
-  <canvas id='box' width='15' height='15'></canvas>
+  <main id='main'>
+    <h3 id='title'>Pong Multiplayer</h3>
+    <canvas id='box' width='15' height='15'></canvas>
+  </main>
 </body>
+
 <script type="module">
   const canvas = document.getElementById('box');
   const ctx = canvas.getContext("2d");
@@ -25,22 +30,20 @@
   });
 
   function renderState(state) {
+    const { players, ball } = state;
+
     ctx.fillStyle = "#000";
     ctx.clearRect(0, 0, 15, 15);
+    ctx.fillRect(ball.x, ball.y, 1, 1);
 
-    for (const playerId in state.players) {
-      if (!playerId) return;
-
-      const player = state.players[playerId];
+    for (const playerId in players) {
+      const player = players[playerId];
 
       ctx.fillStyle = '#fff';
       ctx.fillRect(player.x, player.y, 1, -1);
       ctx.fillRect(player.x, player.y, 1, 1);
       ctx.fillRect(player.x, player.y, 1, 2);
     }
-
-    const ball = state.ball;
-    ctx.fillRect(ball.x, ball.y, 1, 1);
   }
 
   function handleKeyboard(e) {

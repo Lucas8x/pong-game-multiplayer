@@ -11,11 +11,10 @@ import { Player } from './player';
 const { BALL_SPEED, TICK_RATE } = config;
 
 export class Lobby {
-  private rooms: {};
+  private rooms: IAllRooms;
 
   constructor(private maxRooms: number = 50) {
     this.rooms = {};
-    this.createRoom({ ballSpeed: BALL_SPEED, tickRate: TICK_RATE });
   }
 
   private log = (message?: any): void =>
@@ -33,10 +32,10 @@ export class Lobby {
 
   public roomsLength = (): number => this.getRoomsIds().length;
 
-  private createRoom({
-    ballSpeed = 5,
-    tickRate = 60,
-  }: any = {}): ILobbyCreateRoom {
+  public createRoom(
+    ballSpeed = BALL_SPEED || 5,
+    tickRate = TICK_RATE || 60
+  ): ILobbyCreateRoom {
     const roomsIds = this.getRoomsIds();
     if (roomsIds.length === this.maxRooms) return;
 
@@ -78,10 +77,7 @@ export class Lobby {
 
     const rooms = this.getAvaliableRooms();
 
-    const roomId =
-      rooms.length > 0
-        ? rooms[0].id
-        : this.createRoom({ ballSpeed: BALL_SPEED, tickRate: TICK_RATE });
+    const roomId = rooms.length > 0 ? rooms[0].id : this.createRoom();
     if (!roomId) return;
 
     this.directEnterRoom(socket, roomId);

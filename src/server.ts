@@ -3,7 +3,7 @@ import { Socket } from 'socket.io';
 import http from 'http';
 import chalk from 'chalk';
 
-import { log } from './utils';
+import { log, roomsInfo } from './utils';
 import { enableMonitor, config } from './utils/env';
 import { SocketServer } from './socketio';
 import { Monitor } from './utils/monitor';
@@ -16,10 +16,19 @@ const server = http.createServer(app);
 const io = SocketServer.getInstance(server);
 
 app.use(express.static('public'));
+app.use(express.json());
 
 const lobby = new Lobby(MAX_ROOMS);
+lobby.createRoom();
 
-const currentConnections = () => `${io.engine.clientsCount}/${MAX_ROOMS * 2}`;
+app.get('/rooms', (req, res) => {
+  res.json(roomsInfo(lobby));
+});
+
+function currentConnections(): string {
+  return `${io.engine.clientsCount}/${MAX_ROOMS * 2}`;
+}
+
 io.on('connection', (socket: Socket) => {
   if (io.engine.clientsCount > MAX_ROOMS * 2) {
     socket.emit('server reached max connections');
@@ -37,6 +46,8 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('enter_with_id', () => {});
+
+  socket.on('create_room', () => {});
 
   socket.on('disconnect', () => {
     log(

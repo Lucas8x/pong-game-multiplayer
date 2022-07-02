@@ -16,7 +16,7 @@ export class Player {
     this.ready = false;
   }
 
-  public setCoords(x: number, y: number) {
+  public setCoords(x: number, y: number): void {
     this.x = x;
     this.y = y;
   }

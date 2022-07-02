@@ -54,7 +54,7 @@ export class Game {
 
   public playersLength = (): number => Object.keys(this.state.players).length;
 
-  public avaliable = () => this.playersLength() < 2;
+  public avaliable = (): boolean => this.playersLength() < 2;
 
   public addPlayer(player: Player): void {
     const { id } = player;

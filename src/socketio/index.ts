@@ -1,4 +1,4 @@
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import http from 'http';
 
 export class SocketServer extends Server {
