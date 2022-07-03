@@ -25,25 +25,22 @@
     socket.emit('enter_game');
   });
 
-  socket.on('state', (state) => {
-    renderState(state);
-  });
+  socket.on('state', renderState);
 
   function renderState(state) {
     const { players, ball } = state;
-
     ctx.fillStyle = "#000";
     ctx.clearRect(0, 0, 15, 15);
-    ctx.fillRect(ball.x, ball.y, 1, 1);
 
     for (const playerId in players) {
-      const player = players[playerId];
+      const { x, y } = players[playerId];
 
       ctx.fillStyle = '#fff';
-      ctx.fillRect(player.x, player.y, 1, -1);
-      ctx.fillRect(player.x, player.y, 1, 1);
-      ctx.fillRect(player.x, player.y, 1, 2);
+      ctx.fillRect(x, y, 1, -1);
+      ctx.fillRect(x, y, 1, 1);
+      ctx.fillRect(x, y, 1, 2);
     }
+    ctx.fillRect(ball.x, ball.y, 1, 1);
   }
 
   function handleKeyboard(e) {

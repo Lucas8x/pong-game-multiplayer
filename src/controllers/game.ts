@@ -68,6 +68,7 @@ export class Game {
     });
 
     player.socket.on('ready', () => {
+      if (this.started) return;
       player.switchReady();
       this.log(
         chalk`Player {cyan ${id}} is ${player.ready ? 'ready' : 'unready'}.`

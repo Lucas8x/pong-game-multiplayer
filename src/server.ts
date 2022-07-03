@@ -22,7 +22,7 @@ const lobby = new Lobby(MAX_ROOMS);
 lobby.createRoom();
 
 app.get('/rooms', (req, res) => {
-  res.json(roomsInfo(lobby));
+  return res.json(roomsInfo(lobby));
 });
 
 function currentConnections(): string {

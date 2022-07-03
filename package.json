@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsnd --transpile-only --rs --ignore-watch node_modules --watch .env,public src/server.ts",
     "dev2": "cross-env NODE_ENV=development tsnd --transpile-only --rs --clear --ignore-watch node_modules --watch .env,public src/server.ts",
+    "monitor": "cross-env NODE_ENV=development ENABLE_MONITOR=true tsnd --transpile-only --rs --clear --ignore-watch node_modules --watch .env,public src/server.ts",
     "build": "cross-env NODE_ENV=production tsc --build",
     "start": "node dist/server.js"
   },
