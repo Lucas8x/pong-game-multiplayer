@@ -128,26 +128,30 @@ export class Game {
 
   private checkBallCollision(): void {
     const ball = this.state.ball;
+    const { x, y } = ball;
 
     const index = ball.directions.x === 'left' ? 0 : 1;
     const player = this.state.players[Object.keys(this.state.players)[index]];
-    const playerSpace = player.playerSpace();
+    const playerSpace = player?.playerSpace();
 
     // screen collision - top/bottom
-    if (ball.y <= -1 || ball.y === this.state.screen.height) {
-      return this.state.ball.invertBallDirection('y');
+    if (y <= -1 || y === this.state.screen.height) {
+      this.state.ball.invertBallDirection('y');
+      return;
     }
 
     // player collision
     if (
-      playerSpace.x.includes(ball.x + (index ? 1 : -1)) &&
-      playerSpace.y.includes(ball.y)
+      playerSpace &&
+      playerSpace.x.includes(x + (index ? 1 : -1)) &&
+      playerSpace.y.includes(y)
     ) {
-      return this.state.ball.invertBallDirection('x');
+      this.state.ball.invertBallDirection('x');
+      return;
     }
 
     // after player collision - left/right side
-    if (ball.x <= -1 || ball.x >= this.state.screen.width) {
+    if (x <= -1 || x >= this.state.screen.width) {
       this.increaseScore(ball.directions.x);
       this.state.ball.reset();
       this.state.ball.randomBallDirection();
