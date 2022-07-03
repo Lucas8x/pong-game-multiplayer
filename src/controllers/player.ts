@@ -22,8 +22,8 @@ export class Player {
   }
 
   public playerSpace = (): IPlayerSpace => ({
-    x: [this.x - 1, this.x, this.x + 1],
-    y: [this.y],
+    x: [this.x],
+    y: [this.y - 1, this.y, this.y + 1],
   });
 
   public movePlayer(direction: string): void {

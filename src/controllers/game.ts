@@ -139,7 +139,10 @@ export class Game {
     }
 
     // player collision
-    if (playerSpace.x.includes(ball.x) && playerSpace.y.includes(ball.y)) {
+    if (
+      playerSpace.x.includes(ball.x + (index ? 1 : -1)) &&
+      playerSpace.y.includes(ball.y)
+    ) {
       return this.state.ball.invertBallDirection('x');
     }
 
@@ -168,8 +171,9 @@ export class Game {
 
     const players = this.state.players;
     const playersData = Object.keys(players).map((key) => {
-      const { id, x, y } = players[key];
-      return { id, x, y };
+      const player = players[key];
+      const { id, playerSpace } = player;
+      return { id, ...playerSpace() };
     });
 
     const data = {

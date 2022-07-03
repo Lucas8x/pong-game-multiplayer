@@ -6,8 +6,8 @@ export interface IDirectEnterRoom {
 }
 
 export interface IPlayerSpace {
-  x: [number, number, number];
-  y: [number];
+  x: [number];
+  y: [number, number, number];
 }
 
 export interface IAllRooms {
@@ -24,8 +24,8 @@ export interface IReturnGameState {
 
   players: {
     id: string;
-    x: number;
-    y: number;
+    x: [number];
+    y: [number, number, number];
   }[];
 
   screen: {
