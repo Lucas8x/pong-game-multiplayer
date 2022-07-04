@@ -21,6 +21,16 @@
   margin-bottom: 15px;
 }
 
+#content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#scoreboard {
+}
+
 #box {
   width: 500px;
   height: 500px;
@@ -28,4 +38,19 @@
   background-color: black;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+}
+
+#ready {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  color: #ffffff;
+}
+
+#instructions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: #ffffff;
 }

@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+
 import { IReturnGameState } from '../interfaces';
 
 import { SocketServer } from '../socketio';
@@ -70,6 +71,11 @@ export class Game {
     player.socket.on('ready', () => {
       if (this.started) return;
       player.switchReady();
+      const whosReady = Object.values(this.state.players).map((p) => ({
+        id: p.id,
+        ready: p.ready,
+      }));
+      this.io.to(this.id).emit('readyState', whosReady);
       this.log(
         chalk`Player {cyan ${id}} is ${player.ready ? 'ready' : 'unready'}.`
       );
@@ -202,6 +208,7 @@ export class Game {
     clearInterval(this.intervals[2]);
     this.started = true;
     this.log('Starting...');
+    this.io.to(this.id).emit('starting');
 
     this.intervals[0] = setInterval(() => {
       this.state.ball.moveBall();

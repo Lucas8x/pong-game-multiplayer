@@ -9,21 +9,55 @@
 <body>
   <main id='main'>
     <h3 id='title'>Pong Multiplayer</h3>
-    <canvas id='box' width='15' height='15'></canvas>
+
+    <div id='content'>
+      <div id='scoreboard'>
+        <span id='score1'/>
+        <span id='score2'/>
+      </div>
+
+      <canvas id='box' width='15' height='15'></canvas>
+
+      <div id='ready'>
+        <span id='ready1'>Not Ready</span>
+        <span id='ready2'>Not Ready</span>
+      </div>
+
+      <div id='instructions'>
+        <span id='readyInstruction'>Press Enter to get ready</span>
+        <span>Use ↑ Up Arrow and ↓ Down Arrow to move</span>
+      </div>
+    </div>
   </main>
 </body>
 
 <script type="module">
   const canvas = document.getElementById('box');
   const ctx = canvas.getContext("2d");
-
   const socket = io();
 
+  const ready = document.getElementById('ready');
+  const ready1 = document.getElementById('ready1');
+  const ready2 = document.getElementById('ready2');
+  const readyInstruction = document.getElementById('readyInstruction');
+
   socket.on('connect', () => {
-    const { id } = socket;
-    console.log(`[IO] Connected to server. Player ID: ${id}`);
+    console.log(`[IO] Connected to server. Player ID: ${socket.id}`);
     socket.emit('enter_game');
   });
+
+  socket.on('readyState', (readyState) => {
+    readyState.forEach(s => {
+      s.id === socket.id
+      ? ready1.innerText = s.ready ? 'Ready' : 'Not Ready'
+      : ready2.innerText = s.ready ? 'Ready' : 'Not Ready'
+    })
+  });
+
+  socket.on('starting', () => {
+    ready.style.display = 'none';
+    readyInstruction.style.display = 'none';
+  })
 
   socket.on('state', renderState);
 
@@ -44,8 +78,9 @@
 
   function handleKeyboard(e) {
     const { key } = e;
-    if (key === 'Enter')
+    if (key === 'Enter') {
       socket.emit('ready');
+    }
 
     const direction = {"ArrowUp": "up", "ArrowDown": "down"}[key];
     if (direction) {
