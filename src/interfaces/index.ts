@@ -22,14 +22,21 @@ export interface IReturnGameState {
     y: number;
   };
 
-  players: {
+  players: Array<{
     id: string;
     x: [number];
     y: [number, number, number];
-  }[];
+  }>;
 
   screen: {
     width: number;
     height: number;
   };
 }
+
+export type IRoomsData = Array<{
+  id: string;
+  players: number;
+  started: boolean;
+  ballSpeed: number;
+}>;

@@ -10,7 +10,7 @@ import { Player } from './player';
 
 export class Game {
   private io = SocketServer.getInstance();
-  private intervals: NodeJS.Timeout[];
+  private intervals: Array<NodeJS.Timeout>;
   public id: string;
   public started: boolean;
   public state: {
@@ -57,10 +57,30 @@ export class Game {
 
   public avaliable = (): boolean => this.playersLength() < 2;
 
+  private emit(ev: string, args = null): void {
+    this.io.to(this.id).emit(ev, args);
+  }
+
+  private emitReadyState(): void {
+    const whosReady = Object.values(this.state.players).map((p) => ({
+      id: p.id,
+      ready: p.ready,
+    }));
+    this.emit('readyState', whosReady);
+  }
+
+  private emitScoreboard(): void {
+    const scoreboard = Object.values(this.state.players).map((p) => ({
+      id: p.id,
+      score: p.score,
+    }));
+    this.emit('score', scoreboard);
+  }
+
   public addPlayer(player: Player): void {
     const { id } = player;
 
-    if (this.state.players[id] || this.playersLength() >= 2) return;
+    if (!id || this.state.players[id] || this.playersLength() >= 2) return;
 
     player.socket.join(this.id);
 
@@ -71,11 +91,7 @@ export class Game {
     player.socket.on('ready', () => {
       if (this.started) return;
       player.switchReady();
-      const whosReady = Object.values(this.state.players).map((p) => ({
-        id: p.id,
-        ready: p.ready,
-      }));
-      this.io.to(this.id).emit('readyState', whosReady);
+      this.emitReadyState();
       this.log(
         chalk`Player {cyan ${id}} is ${player.ready ? 'ready' : 'unready'}.`
       );
@@ -85,6 +101,8 @@ export class Game {
     player.socket.on('disconnect', () => {
       this.removePlayer(id);
     });
+
+    this.emitReadyState();
 
     const otherPlayer = this.state.players[Object.keys(this.state.players)[0]];
 
@@ -130,21 +148,24 @@ export class Game {
     const playerId = Object.keys(this.state.players)[index];
     const player = this.state.players[playerId];
     player.increaseScore();
+    this.emitScoreboard();
   }
 
   private checkBallCollision(): void {
     const ball = this.state.ball;
-    const { x, y } = ball;
-
-    const index = ball.directions.x === 'left' ? 0 : 1;
-    const player = this.state.players[Object.keys(this.state.players)[index]];
-    const playerSpace = player?.playerSpace();
+    const { x, y, directions } = ball;
+    const { height, width } = this.state.screen;
 
     // screen collision - top/bottom
-    if (y <= -1 || y === this.state.screen.height) {
-      this.state.ball.invertBallDirection('y');
+    if (y <= -1 || y === height) {
+      ball.invertBallDirection('y');
       return;
     }
+
+    const { x: dirX } = directions;
+    const index = dirX === 'left' ? 0 : 1;
+    const player = this.state.players[Object.keys(this.state.players)[index]];
+    const playerSpace = player.playerSpace();
 
     // player collision
     if (
@@ -152,15 +173,15 @@ export class Game {
       playerSpace.x.includes(x + (index ? 1 : -1)) &&
       playerSpace.y.includes(y)
     ) {
-      this.state.ball.invertBallDirection('x');
+      ball.invertBallDirection('x');
       return;
     }
 
     // after player collision - left/right side
-    if (x <= -1 || x >= this.state.screen.width) {
-      this.increaseScore(ball.directions.x);
-      this.state.ball.reset();
-      this.state.ball.randomBallDirection();
+    if (x <= -1 || x >= width) {
+      this.increaseScore(dirX);
+      ball.reset();
+      ball.randomBallDirection();
     }
   }
 
@@ -208,7 +229,7 @@ export class Game {
     clearInterval(this.intervals[2]);
     this.started = true;
     this.log('Starting...');
-    this.io.to(this.id).emit('starting');
+    this.emit('starting');
 
     this.intervals[0] = setInterval(() => {
       this.state.ball.moveBall();
@@ -217,7 +238,7 @@ export class Game {
 
     this.intervals[1] = setInterval(() => {
       this.hasEnoughPlayers();
-      this.io.to(this.id).emit('state', this.stateToBeSend());
+      this.emit('state', this.stateToBeSend());
     }, 1000 / this.settings.tickRate);
   }
 

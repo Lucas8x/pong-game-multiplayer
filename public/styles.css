@@ -29,6 +29,10 @@
 }
 
 #scoreboard {
+  display: none;
+  justify-content: space-around;
+  width: 100%;
+  color: #ffffff;
 }
 
 #box {

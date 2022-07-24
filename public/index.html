@@ -12,8 +12,8 @@
 
     <div id='content'>
       <div id='scoreboard'>
-        <span id='score1'/>
-        <span id='score2'/>
+        <span id='score1'>0</span>
+        <span id='score2'>0</span>
       </div>
 
       <canvas id='box' width='15' height='15'></canvas>
@@ -36,6 +36,10 @@
   const ctx = canvas.getContext("2d");
   const socket = io();
 
+  const scoreboard = document.getElementById('scoreboard');
+  const score1 = document.getElementById('score1');
+  const score2 = document.getElementById('score2');
+
   const ready = document.getElementById('ready');
   const ready1 = document.getElementById('ready1');
   const ready2 = document.getElementById('ready2');
@@ -47,17 +51,28 @@
   });
 
   socket.on('readyState', (readyState) => {
-    readyState.forEach(s => {
-      s.id === socket.id
-      ? ready1.innerText = s.ready ? 'Ready' : 'Not Ready'
-      : ready2.innerText = s.ready ? 'Ready' : 'Not Ready'
+    readyState.forEach(({ id, ready }) => {
+      id === socket.id
+      ? ready1.innerText = ready ? 'Ready' : 'Not Ready'
+      : ready2.innerText = ready ? 'Ready' : 'Not Ready'
     })
   });
+
+  socket.on('score', (scoreboard) => {
+    scoreboard.forEach(({ id, score }) => {
+      id === socket.id
+      ? score1.innerText = score
+      : score2.innerText = score
+    })
+  })
 
   socket.on('starting', () => {
     ready.style.display = 'none';
     readyInstruction.style.display = 'none';
-  })
+    score1.innerText = 0;
+    score2.innerText = 0;
+    scoreboard.style.display = 'flex';
+  });
 
   socket.on('state', renderState);
 
@@ -88,6 +103,6 @@
     }
   }
 
-  document.addEventListener('keydown', handleKeyboard)
+  document.addEventListener('keydown', handleKeyboard);
 </script>
 </html>
